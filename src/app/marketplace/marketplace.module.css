@@ -1,0 +1,202 @@
+.main { padding-top: 64px; }
+
+/* PARTICLES */
+.particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.particle {
+  position: absolute; bottom: -4px;
+  width: var(--size, 2px); height: var(--size, 2px);
+  background: var(--neon); border-radius: 50%;
+  opacity: 0; box-shadow: 0 0 4px var(--neon);
+  animation: particleRise var(--dur, 8s) var(--delay, 0s) ease-in infinite;
+}
+@keyframes particleRise {
+  0%   { opacity:0; transform:translateY(0) translateX(0); }
+  10%  { opacity:0.7; }
+  90%  { opacity:0.2; }
+  100% { opacity:0; transform:translateY(-100vh) translateX(var(--drift,40px)); }
+}
+
+/* HERO */
+.hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: gridDrift 25s linear infinite;
+}
+@keyframes gridDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 80px 80px; }
+}
+
+.heroEyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 5px 14px;
+  background: rgba(0,255,200,0.05); border: 1px solid rgba(0,255,200,0.25);
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  color: var(--neon); letter-spacing: 0.12em;
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s ease both;
+  transition: all 0.5s;
+}
+.liveDot {
+  width: 6px; height: 6px; background: var(--neon); border-radius: 50%;
+  box-shadow: 0 0 6px var(--neon); animation: pulse 1.5s infinite;
+}
+
+.heroTitle {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(4rem, 9vw, 9rem);
+  line-height: 0.9; letter-spacing: 0.02em;
+  animation: fadeUp 0.6s 0.1s ease both;
+  position: relative; z-index: 1;
+}
+.line1 { display: block; color: var(--text); transition: color 0.5s; }
+.line2 {
+  display: block; color: transparent;
+  -webkit-text-stroke: 1px var(--neon);
+  text-shadow: 0 0 40px rgba(0,255,200,0.2);
+  transition: all 0.5s;
+}
+.line3 { display: block; color: var(--neon2); text-shadow: 0 0 20px rgba(0,212,255,0.4); transition: all 0.5s; }
+
+.heroSub {
+  margin-top: 28px; font-size: 1rem; color: var(--text2);
+  max-width: 500px; line-height: 1.7;
+  animation: fadeUp 0.6s 0.2s ease both;
+  transition: color 0.5s;
+}
+.heroActions {
+  display: flex; gap: 16px; margin-top: 40px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+/* STATS */
+.statsRow {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  margin-top: 80px; border: 1px solid var(--border);
+  border-radius: 3px; overflow: hidden;
+  animation: fadeUp 0.6s 0.4s ease both;
+  position: relative; transition: border-color 0.5s;
+}
+.statsRow::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon), var(--neon2), var(--neon3), transparent);
+  animation: shimmerMove 3s linear infinite;
+  background-size: 200% auto;
+}
+.statItem {
+  padding: 28px 32px; border-right: 1px solid var(--border);
+  position: relative; overflow: hidden; transition: background 0.3s, border-color 0.5s;
+}
+.statItem:last-child { border-right: none; }
+.statItem:hover { background: rgba(0,255,200,0.03); }
+.statVal {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 0.05em;
+  color: var(--neon); text-shadow: 0 0 20px rgba(0,255,200,0.3); line-height: 1;
+  transition: color 0.5s, text-shadow 0.5s;
+  animation: numberRoll 0.6s ease both;
+}
+.statLabel {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  color: var(--muted); margin-top: 6px; letter-spacing: 0.12em; transition: color 0.5s;
+}
+
+/* SHOP */
+.shop { padding: 60px 0; position: relative; z-index: 1; }
+.sectionHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+.sectionTitle {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.05em;
+  display: flex; align-items: center; gap: 12px; color: var(--text); transition: color 0.5s;
+}
+.sectionTitle::before {
+  content: ''; display: inline-block; width: 4px; height: 28px;
+  background: linear-gradient(180deg, var(--neon), var(--neon2));
+  border-radius: 2px; box-shadow: 0 0 10px var(--neon);
+}
+.sectionTag {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--neon);
+  background: rgba(0,255,200,0.06); border: 1px solid rgba(0,255,200,0.2);
+  padding: 4px 12px; border-radius: 2px; letter-spacing: 0.1em; transition: all 0.5s;
+}
+
+/* SEARCH */
+.searchBar {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 3px; padding: 12px 20px; margin-bottom: 20px;
+  transition: border-color 0.2s, background 0.5s;
+}
+.searchBar:focus-within { border-color: var(--neon); box-shadow: 0 0 20px rgba(0,255,200,0.06); }
+.searchIcon { color: var(--neon); font-size: 0.9rem; }
+.searchBar input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+  transition: color 0.5s;
+}
+.searchBar input::placeholder { color: var(--muted); }
+.clearBtn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; transition: color 0.2s; }
+.clearBtn:hover { color: var(--red); }
+
+/* FILTERS */
+.filterBar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
+.chip {
+  padding: 7px 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 2px; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.08em;
+  cursor: pointer; transition: all 0.2s;
+}
+.chip:hover { border-color: var(--neon); color: var(--neon); background: rgba(0,255,200,0.04); }
+.chipActive { border-color: var(--neon) !important; color: var(--neon) !important; background: rgba(0,255,200,0.08) !important; }
+
+/* CARD REVEAL */
+.cardReveal {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.23,1,0.32,1);
+}
+.cardVisible { opacity: 1; transform: translateY(0); }
+
+.grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr));
+  gap: 16px; margin-bottom: 64px;
+}
+
+/* ESCROW */
+.escrowSection { padding: 0 0 80px; position: relative; z-index: 1; }
+.escrowCard {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 3px; overflow: hidden;
+  position: relative; transition: background 0.5s, border-color 0.5s;
+}
+.escrowCard::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon2), transparent);
+  animation: shimmerMove 3s linear infinite; background-size: 200% auto;
+}
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  padding: 12px 24px; text-align: left;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 0.1em; border-bottom: 1px solid var(--border);
+  background: rgba(0,255,200,0.02); transition: all 0.5s;
+}
+.table td { padding: 14px 24px; font-size: 0.82rem; border-bottom: 1px solid rgba(0,255,200,0.05); transition: all 0.5s; }
+.tableRow { animation: slideInLeft 0.5s ease both; }
+.table tr:hover td { background: rgba(0,255,200,0.02); }
+
+/* ── LIGHT MODE OVERRIDES ── */
+[data-theme="light"] .hero::before {
+  background-image:
+    linear-gradient(rgba(0,158,122,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,158,122,0.06) 1px, transparent 1px);
+}
+[data-theme="light"] .statVal { color: var(--neon); text-shadow: none; }
+[data-theme="light"] .sectionTitle::before { box-shadow: none; }
+[data-theme="light"] .escrowCard { box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+[data-theme="light"] .chip:hover { background: rgba(0,158,122,0.06); }
+[data-theme="light"] .chipActive { background: rgba(0,158,122,0.1) !important; }
+[data-theme="light"] .searchBar { box-shadow: 0 2px 12px rgba(0,0,0,0.04); }

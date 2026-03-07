@@ -1,0 +1,148 @@
+.nav {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  padding: 0 40px; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.4s, border-color 0.4s;
+}
+.nav::after {
+  content: ''; position: absolute; bottom:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--neon), var(--neon2), transparent);
+  opacity: 0.5; animation: navPulse 4s ease-in-out infinite;
+}
+@keyframes navPulse { 0%,100%{opacity:0.3;} 50%{opacity:0.8;} }
+
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
+  letter-spacing: 0.08em; text-decoration: none; color: var(--text);
+  transition: color 0.4s;
+}
+.logoIcon {
+  width: 32px; height: 32px; border: 1px solid var(--neon); border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: var(--neon); box-shadow: var(--glow-neon);
+  animation: borderGlow 3s ease-in-out infinite; transition: all 0.4s;
+}
+.logo span { color: var(--neon); transition: color 0.4s, text-shadow 0.4s; }
+
+.links { display: flex; gap: 40px; align-items: center; }
+.links a {
+  color: var(--muted); text-decoration: none;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.1em;
+  transition: color 0.2s; position: relative;
+}
+.links a::after {
+  content: ''; position: absolute; bottom: -4px; left:0; right:0; height:1px;
+  background: var(--neon); transform: scaleX(0); transition: transform 0.25s;
+}
+.links a:hover { color: var(--neon); }
+.links a:hover::after { transform: scaleX(1); }
+.active { color: var(--text) !important; }
+.active::after { transform: scaleX(1) !important; }
+
+.right { display: flex; gap: 10px; align-items: center; }
+
+/* ── THEME TOGGLE ── */
+.themeToggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+.themeToggle:hover {
+  border-color: var(--neon);
+  box-shadow: var(--glow-neon);
+  transform: scale(1.04);
+}
+.themeToggle:active { transform: scale(0.97); }
+
+.orb {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--neon);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 8px var(--neon);
+}
+.orbLight {
+  background: #fff8e0;
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 12px rgba(255,200,0,0.5);
+  animation: sunSpin 8s linear infinite;
+}
+@keyframes sunSpin {
+  from { filter: drop-shadow(0 0 4px rgba(255,200,0,0.6)); }
+  50%  { filter: drop-shadow(0 0 10px rgba(255,200,0,0.9)); }
+  to   { filter: drop-shadow(0 0 4px rgba(255,200,0,0.6)); }
+}
+
+.themeLabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--muted); transition: color 0.3s;
+}
+.themeToggle:hover .themeLabel { color: var(--neon); }
+
+/* WALLET */
+.wusdBadge {
+  display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+  background: rgba(0,255,200,0.06); border: 1px solid rgba(0,255,200,0.25);
+  border-radius: 3px; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem; color: var(--neon); transition: all 0.4s;
+}
+
+.walletBtn {
+  padding: 8px 18px; background: transparent;
+  border: 1px solid var(--neon); border-radius: 3px;
+  color: var(--neon); font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem; letter-spacing: 0.08em; cursor: pointer;
+  transition: all 0.3s;
+}
+.walletBtn::before {
+  content: ''; position: absolute; inset:0; background: var(--neon);
+  transform: translateX(-101%); transition: transform 0.3s; z-index:-1;
+}
+.walletBtn:hover { color: var(--bg); box-shadow: var(--glow-neon); }
+.walletBtn:hover::before { transform: translateX(0); }
+.walletBtn:disabled { opacity:0.5; cursor:not-allowed; }
+
+.walletConnected {
+  padding: 8px 18px; background: rgba(0,255,200,0.08);
+  border: 1px solid var(--neon); border-radius: 3px;
+  color: var(--neon); font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  transition: all 0.4s;
+}
+
+.ripple {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(0,255,200,0.5); transform: scale(0);
+  margin-left: -3px; margin-top: -3px; pointer-events: none;
+  animation: ripple 0.7s ease-out forwards;
+}
+
+.cartBtn {
+  position: relative; padding: 8px 14px;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 3px; color: var(--text2); font-size: 1rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.cartBtn:hover { border-color: var(--neon2); color: var(--neon2); }
+.cartBadge {
+  position: absolute; top:-6px; right:-6px;
+  width: 18px; height: 18px; background: var(--neon); border-radius: 50%;
+  font-size: 0.62rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bg); font-family: 'JetBrains Mono', monospace;
+  box-shadow: 0 0 8px var(--neon);
+  animation: badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes badgePop { from{transform:scale(0);} to{transform:scale(1);} }
