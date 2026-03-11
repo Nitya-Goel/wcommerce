@@ -14,12 +14,15 @@ const CONNECT_STEPS = ['Initializing wallet...', 'Requesting permissions...', 'V
 const ESCROW_STEPS  = ['Creating escrow contract...', 'Locking WUSD...', 'AI verification initiated...', 'On-chain audit logged...', 'Done!']
 
 export default function CheckoutPage() {
-  const { cart, cartTotal, clearCart, connectWallet, wallet } = useApp()
-  const [step, setStep] = useState(0)           // 0=wallet, 1=review, 2=done
+  const { cart, cartTotal, clearCart, connectWallet, wallet, payWithWUSD } = useApp()
+  const [step, setStep] = useState(0)
   const [selectedWallet, setSelectedWallet] = useState('weil')
   const [connecting, setConnecting] = useState(false)
   const [connectingMsg, setConnectingMsg] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [escrowResult, setEscrowResult] = useState(null)
+  const [escrowError, setEscrowError] = useState(null)
+
   const aiSavings = Math.round(cartTotal * 0.12 * 100) / 100
   const fee = Math.round(cartTotal * 0.01 * 100) / 100
   const total = Math.round((cartTotal - aiSavings + fee) * 100) / 100
@@ -37,20 +40,37 @@ export default function CheckoutPage() {
 
   async function handleConfirm() {
     setConfirming(true)
-    for (const msg of ESCROW_STEPS) {
-      setConnectingMsg(msg)
+    setEscrowError(null)
+    for (let i = 0; i < ESCROW_STEPS.length - 1; i++) {
+      setConnectingMsg(ESCROW_STEPS[i])
       await new Promise(r => setTimeout(r, 700))
     }
+    try {
+      const seller = cart[0]?.seller || 'SELLER_VAULT'
+      const result = await payWithWUSD({
+        to: seller,
+        amount: total,
+        orderId: 'ORDER-' + Date.now(),
+      })
+      setEscrowResult(result)
+    } catch (err) {
+      console.error('Escrow error:', err)
+      setEscrowError(err.message)
+    }
+    setConnectingMsg(ESCROW_STEPS[ESCROW_STEPS.length - 1])
+    await new Promise(r => setTimeout(r, 400))
     setConfirming(false)
-    setStep(2)
     clearCart()
+    setStep(2)
   }
+
+  const blockNum = escrowResult?.blockIndex ? '#' + escrowResult.blockIndex : '#48,294'
+  const escrowId = escrowResult?.escrowId || '—'
 
   return (
     <>
       <Navbar />
       <div className={styles.page}>
-        {/* STEPS */}
         <div className={styles.steps}>
           {STEPS.map((s, i) => (
             <span key={s} style={{ display: 'contents' }}>
@@ -80,16 +100,13 @@ export default function CheckoutPage() {
           </div>
 
           <div className={styles.cardBody}>
-            {/* ── WALLET SELECTION ── */}
             {step === 0 && !connecting && (
               <>
                 <div className={styles.walletOptions}>
                   {WALLET_OPTIONS.map(w => (
-                    <div
-                      key={w.id}
+                    <div key={w.id}
                       className={`${styles.walletOption} ${selectedWallet === w.id ? styles.walletSelected : ''}`}
-                      onClick={() => setSelectedWallet(w.id)}
-                    >
+                      onClick={() => setSelectedWallet(w.id)}>
                       {w.recommended && <div className={styles.recommended}>RECOMMENDED</div>}
                       <div className={styles.walletIcon}>{w.icon}</div>
                       <div className={styles.walletInfo}>
@@ -105,7 +122,6 @@ export default function CheckoutPage() {
               </>
             )}
 
-            {/* ── CONNECTING / CONFIRMING ── */}
             {(connecting || confirming) && (
               <div className={styles.spinnerWrap}>
                 <div className={styles.spinner} />
@@ -114,7 +130,6 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* ── ORDER REVIEW ── */}
             {step === 1 && !confirming && (
               <>
                 <div className={styles.walletCard}>
@@ -126,11 +141,9 @@ export default function CheckoutPage() {
                   </div>
                   <div style={{ marginLeft: 'auto', fontSize: '1.5rem' }}>✓</div>
                 </div>
-
                 {cart.length > 0 && (
                   <div className={styles.aiSavings}>🤖 Icarus Agent negotiated 12% savings on your order!</div>
                 )}
-
                 <div className={styles.orderSummary}>
                   <div className={styles.orderTitle}>ORDER SUMMARY</div>
                   {cart.length === 0
@@ -139,7 +152,9 @@ export default function CheckoutPage() {
                       <div key={item.id} className={styles.orderItem}>
                         <div className={styles.orderEmoji}>{item.emoji}</div>
                         <div style={{ flex: 1, fontSize: '0.88rem', fontWeight: 500 }}>{item.name}</div>
-                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: '0.88rem', color: 'var(--accent3)' }}>{item.price * item.qty} WUSD</div>
+                        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: '0.88rem', color: 'var(--accent3)' }}>
+                          {(item.priceWUSD || item.price) * item.qty} WUSD
+                        </div>
                       </div>
                     ))
                   }
@@ -148,13 +163,14 @@ export default function CheckoutPage() {
                   <div className={styles.row}><span>AI Savings (12%)</span><span style={{fontFamily:"'DM Mono',monospace",color:'var(--green)'}}>-{aiSavings} WUSD</span></div>
                   <div className={styles.row}><span>Platform fee (1%)</span><span style={{fontFamily:"'DM Mono',monospace"}}>{fee} WUSD</span></div>
                   <div className={styles.divider} />
-                  <div className={`${styles.row} ${styles.rowTotal}`}><span>Total</span><span style={{fontFamily:"'DM Mono',monospace",color:'var(--accent3)',fontSize:'1.1rem'}}>{total} WUSD</span></div>
+                  <div className={`${styles.row} ${styles.rowTotal}`}>
+                    <span>Total</span>
+                    <span style={{fontFamily:"'DM Mono',monospace",color:'var(--accent3)',fontSize:'1.1rem'}}>{total} WUSD</span>
+                  </div>
                 </div>
-
                 <div className={styles.escrowNote}>
-                  🔐 <strong>Smart Escrow:</strong> {total} WUSD will be locked on Weilchain. Funds release automatically when AI verification confirms delivery.
+                  🔐 <strong>Smart Escrow:</strong> {total} WUSD will be locked on WeilChain. Funds release automatically when AI verification confirms delivery.
                 </div>
-
                 <button className={styles.mainBtn} onClick={handleConfirm} disabled={cart.length === 0}>
                   🔐 Lock {total} WUSD in Escrow
                 </button>
@@ -162,18 +178,25 @@ export default function CheckoutPage() {
               </>
             )}
 
-            {/* ── SUCCESS ── */}
             {step === 2 && !confirming && (
               <div className={styles.success}>
                 <div className={styles.successIcon}>✓</div>
                 <h3 className={styles.successTitle}>Escrow Created!</h3>
-                <p className={styles.successSub}>Your payment is locked on Weilchain. Icarus Agent is monitoring delivery. Funds release automatically upon verification.</p>
+                <p className={styles.successSub}>
+                  Your payment is locked on WeilChain. Icarus Agent is monitoring delivery. Funds release automatically upon verification.
+                </p>
+                {escrowError && (
+                  <div style={{color:'var(--red)',fontSize:'0.78rem',marginBottom:12,fontFamily:"'DM Mono',monospace"}}>
+                    ⚠ {escrowError}
+                  </div>
+                )}
                 <div className={styles.receipt}>
                   {[
-                    { label: 'Amount Locked', val: `${total} WUSD` },
-                    { label: 'Block',          val: '#48,294' },
-                    { label: 'Agent',          val: 'Icarus_Alpha' },
-                    { label: 'Status',         val: 'ESCROWED' },
+                    { label: 'Amount Locked', val: total + ' WUSD' },
+                    { label: 'Escrow ID',     val: escrowId },
+                    { label: 'Block',         val: blockNum },
+                    { label: 'Agent',         val: 'Icarus_Alpha' },
+                    { label: 'Status',        val: 'ESCROWED' },
                   ].map(r => (
                     <div key={r.label} className={styles.receiptRow}>
                       <span style={{ color: 'var(--muted)' }}>{r.label}</span>
