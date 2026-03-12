@@ -6,6 +6,8 @@ import AgentChat from '@/components/AgentChat'
 import { PRODUCTS, ESCROW_DATA, CATEGORIES } from '@/data/products'
 import styles from './marketplace.module.css'
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
 // ── Animated counter hook ──
 function useCounter(target, duration = 1800, start = false) {
   const [value, setValue] = useState(0)
@@ -28,7 +30,6 @@ function useCounter(target, duration = 1800, start = false) {
   return value
 }
 
-// ── Single stat with counter ──
 function StatItem({ val, label, delay }) {
   const ref = useRef(null)
   const [visible, setVisible] = useState(false)
@@ -38,12 +39,11 @@ function StatItem({ val, label, delay }) {
     return () => obs.disconnect()
   }, [])
   const prefix = val.startsWith('$') ? '$' : ''
-  const suffix = val.endsWith('%') ? '%' : val.includes('M') ? 'M' : val.includes(',') && !val.startsWith('$') ? '' : ''
   const raw    = val.replace(/[$%M,]/g, '')
   const count  = useCounter(raw, 1800, visible)
   return (
     <div ref={ref} className={styles.statItem} style={{ animationDelay: `${delay}s` }}>
-      <div className={styles.statVal}>{prefix}{count}{suffix || (val.endsWith('%') ? '%' : val.includes('M') ? 'M' : '')}</div>
+      <div className={styles.statVal}>{prefix}{count}{val.endsWith('%') ? '%' : val.includes('M') ? 'M' : ''}</div>
       <div className={styles.statLabel}>{label}</div>
     </div>
   )
@@ -53,6 +53,39 @@ export default function MarketplacePage() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [negotiateProduct, setNegotiateProduct] = useState(null)
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // ── Fetch products from backend ──
+  useEffect(() => {
+    const url = `${BACKEND_URL}/api/products`
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data?.length > 0) {
+          // Normalize MongoDB fields to match our UI expectations
+          const normalized = data.data.map(p => ({
+            ...p,
+            id: p._id,
+            price: p.priceWUSD,
+            desc: p.description,
+            imgBg: 'linear-gradient(135deg, #061020, #0a1830)',
+            imgGlow: '#00ffc8',
+            badges: [],
+            reviews: p.reviewCount,
+          }))
+          setProducts(normalized)
+        } else {
+          // fallback to static
+          setProducts(PRODUCTS)
+        }
+      })
+      .catch(() => {
+        console.warn('Backend offline, using static products')
+        setProducts(PRODUCTS)
+      })
+      .finally(() => setLoading(false))
+  }, [])
 
   // Stagger reveal for grid
   useEffect(() => {
@@ -62,12 +95,13 @@ export default function MarketplacePage() {
     }, { threshold: 0.1 })
     cards.forEach(c => obs.observe(c))
     return () => obs.disconnect()
-  }, [filter, search])
+  }, [filter, search, products])
 
-  const filtered = PRODUCTS.filter(p => {
+  const filtered = products.filter(p => {
     const matchCat = filter === 'all' || p.category === filter
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-                        p.desc.toLowerCase().includes(search.toLowerCase())
+    const matchSearch = !search ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.desc || p.description || '').toLowerCase().includes(search.toLowerCase())
     return matchCat && matchSearch
   })
 
@@ -114,7 +148,7 @@ export default function MarketplacePage() {
                 { val: '$2.4M', label: 'TOTAL WUSD VOLUME' },
                 { val: '1247',  label: 'ACTIVE AI AGENTS' },
                 { val: '12.4%', label: 'AVG NEGOTIATION SAVINGS' },
-                { val: '99.8%',  label: 'ESCROW SUCCESS RATE' },
+                { val: '99.8%', label: 'ESCROW SUCCESS RATE' },
               ].map((s, i) => <StatItem key={s.label} val={s.val} label={s.label} delay={i * 0.1} />)}
             </div>
           </div>
@@ -137,11 +171,22 @@ export default function MarketplacePage() {
                 </button>
               ))}
             </div>
-            <div className={styles.grid}>
-              {filtered.map((p, i) => (
-                <ProductCard key={p.id} product={p} delay={i * 0.06} onAgentNegotiate={setNegotiateProduct} />
-              ))}
-            </div>
+
+            {loading ? (
+              <div style={{ textAlign:'center', padding:'60px 0', fontFamily:"'JetBrains Mono',monospace", color:'var(--neon)', fontSize:'0.85rem', letterSpacing:'0.1em' }}>
+                ◈ LOADING FROM WEILCHAIN...
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'60px 0', fontFamily:"'JetBrains Mono',monospace", color:'var(--muted)', fontSize:'0.85rem' }}>
+                NO PRODUCTS FOUND
+              </div>
+            ) : (
+              <div className={styles.grid}>
+                {filtered.map((p, i) => (
+                  <ProductCard key={p._id || p.id} product={p} delay={i * 0.06} onAgentNegotiate={setNegotiateProduct} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
