@@ -168,3 +168,58 @@
 [data-theme="light"] .atcBtn:hover::before {
   background: rgba(0,122,94,0.12);
 }
+
+/* ═══ SCAN LINE ═══ */
+.scanLine {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neon), transparent);
+  opacity: 0.3;
+  animation: scan 3s linear infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes scan {
+  0%   { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* ═══ ATC ANIMATION FIX ═══ */
+/* cart element positioning */
+.atcBtn .atc-cart {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  margin-left: -18px;
+  transform: translate(var(--atc-cart-x), var(--atc-cart-y)) rotate(var(--atc-cart-rotate)) scale(var(--atc-cart-scale));
+  clip-path: inset(0 var(--atc-cart-clip) 0 var(--atc-cart-clip-x));
+}
+
+/* shirt element positioning */
+.atcBtn .atc-shirt {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  margin: -12px 0 0 -12px;
+  top: 0;
+  transform-origin: 50% 100%;
+  transform: translateY(var(--atc-shirt-y)) scale(var(--atc-shirt-scale));
+}
+
+/* morph wave fill fix — must match card surface */
+.atcBtn .atc-morph {
+  fill: var(--surface) !important;
+}
+
+/* reveal animation for cards */
+:global(.reveal) {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+:global(.revealed) {
+  opacity: 1;
+  transform: translateY(0);
+}
