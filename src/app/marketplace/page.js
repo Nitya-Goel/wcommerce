@@ -6,7 +6,6 @@ import AgentChat from '@/components/AgentChat'
 import { PRODUCTS, ESCROW_DATA, CATEGORIES } from '@/data/products'
 import styles from './marketplace.module.css'
 
-// ── Animated counter hook ──
 function useCounter(target, duration = 1800, start = false) {
   const [value, setValue] = useState(0)
   useEffect(() => {
@@ -18,9 +17,7 @@ function useCounter(target, duration = 1800, start = false) {
       if (!startTime) startTime = ts
       const progress = Math.min((ts - startTime) / duration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(isDecimal
-        ? (eased * numTarget).toFixed(1)
-        : Math.floor(eased * numTarget).toLocaleString())
+      setValue(isDecimal ? (eased * numTarget).toFixed(1) : Math.floor(eased * numTarget).toLocaleString())
       if (progress < 1) requestAnimationFrame(step)
     }
     requestAnimationFrame(step)
@@ -37,8 +34,8 @@ function StatItem({ val, label, delay }) {
     return () => obs.disconnect()
   }, [])
   const prefix = val.startsWith('$') ? '$' : ''
-  const raw    = val.replace(/[$%M,]/g, '')
-  const count  = useCounter(raw, 1800, visible)
+  const raw = val.replace(/[$%M,]/g, '')
+  const count = useCounter(raw, 1800, visible)
   return (
     <div ref={ref} className={styles.statItem} style={{ animationDelay: `${delay}s` }}>
       <div className={styles.statVal}>{prefix}{count}{val.endsWith('%') ? '%' : val.includes('M') ? 'M' : ''}</div>
@@ -51,13 +48,17 @@ export default function MarketplacePage() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [negotiateProduct, setNegotiateProduct] = useState(null)
-  const [products, setProducts] = useState(PRODUCTS) // ✅ start with static
-  const [loading, setLoading] = useState(false)       // ✅ no loading spinner
+  const [products, setProducts] = useState([])
+  const [mounted, setMounted] = useState(false)
 
-  // ── Fetch products from backend ──
   useEffect(() => {
+    // Step 1: set static products immediately on client
+    setProducts(PRODUCTS)
+    setMounted(true)
+
+    // Step 2: try to fetch from backend in background
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 5000) // 5s timeout
+    const timeout = setTimeout(() => controller.abort(), 6000)
 
     fetch('https://wcommerce-production.up.railway.app/api/products', {
       signal: controller.signal
@@ -66,7 +67,7 @@ export default function MarketplacePage() {
       .then(data => {
         clearTimeout(timeout)
         if (data.success && data.data?.length > 0) {
-          const normalized = data.data.map(p => ({
+          setProducts(data.data.map(p => ({
             ...p,
             id: p._id,
             price: p.priceWUSD,
@@ -75,25 +76,23 @@ export default function MarketplacePage() {
             imgGlow: '#00ffc8',
             badges: [],
             reviews: p.reviewCount,
-          }))
-          setProducts(normalized)
+          })))
         }
       })
-      .catch(() => {
-        clearTimeout(timeout)
-        // keep static PRODUCTS (already set as default)
-      })
+      .catch(() => clearTimeout(timeout))
+
+    return () => { clearTimeout(timeout); controller.abort() }
   }, [])
 
-  // Stagger reveal for grid
   useEffect(() => {
+    if (!mounted) return
     const cards = document.querySelectorAll('.reveal')
     const obs = new IntersectionObserver((entries) => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
     }, { threshold: 0.1 })
     cards.forEach(c => obs.observe(c))
     return () => obs.disconnect()
-  }, [filter, search, products])
+  }, [filter, search, products, mounted])
 
   const filtered = products.filter(p => {
     const matchCat = filter === 'all' || p.category === filter
@@ -102,6 +101,8 @@ export default function MarketplacePage() {
       (p.desc || p.description || '').toLowerCase().includes(search.toLowerCase())
     return matchCat && matchSearch
   })
+
+  if (!mounted) return null
 
   return (
     <>
