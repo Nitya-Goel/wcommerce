@@ -27,8 +27,12 @@ export function AppProvider({ children }) {
       fetch(`${BLOCKCHAIN_URL}/wallet/${saved.address}`)
         .then(r => r.json())
         .then(d => {
-          if (d.success) setWallet({ ...saved, balance: d.balanceWUSD })
-          else setWallet(saved)
+          // ✅ Only update if blockchain has a HIGHER balance (don't overwrite with 0)
+          if (d.success && d.balanceWUSD > 0) {
+            setWallet({ ...saved, balance: d.balanceWUSD })
+          } else {
+            setWallet(saved) // keep saved balance
+          }
         })
         .catch(() => setWallet(saved))
     }
