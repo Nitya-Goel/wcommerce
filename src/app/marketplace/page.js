@@ -6,7 +6,7 @@ import AgentChat from '@/components/AgentChat'
 import { PRODUCTS, ESCROW_DATA, CATEGORIES } from '@/data/products'
 import styles from './marketplace.module.css'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const BACKEND_URL = 'https://wcommerce-production.up.railway.app'
 
 // ── Animated counter hook ──
 function useCounter(target, duration = 1800, start = false) {
