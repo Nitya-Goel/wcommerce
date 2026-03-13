@@ -118,6 +118,17 @@ export function AppProvider({ children }) {
     const buyerAddress  = wallet.address || 'BUYER_' + Date.now()
     const sellerAddress = (to && typeof to === 'string' && to.length > 0) ? to : 'SELLER_VAULT'
 
+    // ✅ Re-mint if blockchain reset (Railway restarts wipe in-memory state)
+    const balCheck = await fetch(`${BLOCKCHAIN_URL}/wallet/${buyerAddress}`)
+      .then(r => r.json()).catch(() => null)
+    if (!balCheck?.success || balCheck.balanceWUSD < Number(amount)) {
+      await fetch(`${BLOCKCHAIN_URL}/wallet/faucet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: buyerAddress, amount: wallet.balance || 1250 })
+      }).catch(() => null)
+    }
+
     const res = await fetch(`${BLOCKCHAIN_URL}/escrow/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
