@@ -75,7 +75,7 @@ export function AppProvider({ children }) {
         // Fetch latest balance from blockchain
         const res = await fetch(`${BLOCKCHAIN_URL}/wallet/${existing.address}`)
           .then(r => r.json()).catch(() => null)
-        const balance = res?.success ? res.balanceWUSD : existing.balance
+        const balance = (res?.success && res.balanceWUSD > 0) ? res.balanceWUSD : existing.balance
         const w = { ...existing, balance }
         setWallet(w)
         saveWallet(w)
