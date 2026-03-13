@@ -6,8 +6,6 @@ import AgentChat from '@/components/AgentChat'
 import { PRODUCTS, ESCROW_DATA, CATEGORIES } from '@/data/products'
 import styles from './marketplace.module.css'
 
-const BACKEND_URL = 'https://wcommerce-production.up.railway.app'
-
 // ── Animated counter hook ──
 function useCounter(target, duration = 1800, start = false) {
   const [value, setValue] = useState(0)
@@ -53,17 +51,21 @@ export default function MarketplacePage() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [negotiateProduct, setNegotiateProduct] = useState(null)
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [products, setProducts] = useState(PRODUCTS) // ✅ start with static
+  const [loading, setLoading] = useState(false)       // ✅ no loading spinner
 
   // ── Fetch products from backend ──
   useEffect(() => {
-    const url = `${BACKEND_URL}/api/products`
-    fetch(url)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000) // 5s timeout
+
+    fetch('https://wcommerce-production.up.railway.app/api/products', {
+      signal: controller.signal
+    })
       .then(r => r.json())
       .then(data => {
+        clearTimeout(timeout)
         if (data.success && data.data?.length > 0) {
-          // Normalize MongoDB fields to match our UI expectations
           const normalized = data.data.map(p => ({
             ...p,
             id: p._id,
@@ -75,16 +77,12 @@ export default function MarketplacePage() {
             reviews: p.reviewCount,
           }))
           setProducts(normalized)
-        } else {
-          // fallback to static
-          setProducts(PRODUCTS)
         }
       })
       .catch(() => {
-        console.warn('Backend offline, using static products')
-        setProducts(PRODUCTS)
+        clearTimeout(timeout)
+        // keep static PRODUCTS (already set as default)
       })
-      .finally(() => setLoading(false))
   }, [])
 
   // Stagger reveal for grid
@@ -171,12 +169,7 @@ export default function MarketplacePage() {
                 </button>
               ))}
             </div>
-
-            {loading ? (
-              <div style={{ textAlign:'center', padding:'60px 0', fontFamily:"'JetBrains Mono',monospace", color:'var(--neon)', fontSize:'0.85rem', letterSpacing:'0.1em' }}>
-                ◈ LOADING FROM WEILCHAIN...
-              </div>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <div style={{ textAlign:'center', padding:'60px 0', fontFamily:"'JetBrains Mono',monospace", color:'var(--muted)', fontSize:'0.85rem' }}>
                 NO PRODUCTS FOUND
               </div>
