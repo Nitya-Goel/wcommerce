@@ -81,7 +81,7 @@ export default function Navbar() {
             </span>
           </button>
 
-          {wallet && (
+          {wallet && wallet.balance > 0 && (
             <div className={styles.wusdBadge}>◈ {wallet.balance.toLocaleString()} WUSD</div>
           )}
 
